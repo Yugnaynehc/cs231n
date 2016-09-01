@@ -74,7 +74,10 @@ class TwoLayerNet(object):
         # Store the result in the scores variable, which should be an array of      #
         # shape (N, C).                                                             #
         #######################################################################
-        pass
+        H1 = np.dot(X, W1) + b1
+        O1 = np.maximum(0, H1)
+        H2 = np.dot(O1, W2) + b2
+        scores = H2
         #######################################################################
         #                              END OF YOUR CODE                             #
         #######################################################################
@@ -92,7 +95,11 @@ class TwoLayerNet(object):
         # classifier loss. So that your results match ours, multiply the            #
         # regularization loss by 0.5                                                #
         #######################################################################
-        pass
+        scores -= np.max(scores, axis=1, keepdims=True)
+        exp_scores = np.exp(scores)
+        exp_scores_sum = np.sum(exp_scores, axis=1)
+        loss = np.sum(np.log(exp_scores_sum)-scores[range(N), y]) / N
+        loss += 0.5 * reg * (np.sum(W1*W1)+np.sum(W2*W2))
         #######################################################################
         #                              END OF YOUR CODE                             #
         #######################################################################
@@ -104,7 +111,15 @@ class TwoLayerNet(object):
         # and biases. Store the results in the grads dictionary. For example,       #
         # grads['W1'] should store the gradient on W1, and be a matrix of same size #
         #######################################################################
-        pass
+        grads['W2'] = np.zeros_like(W2)
+        grads['b2'] = np.zeros_like(b2)
+        grads['W1'] = np.zeros_like(W1)
+        grads['b1'] = np.zeros_like(b1)
+        exp_scores[range(N), y] -= exp_scores_sum
+        exp_scores_sum.shape = -1, 1
+        exp_scores /= exp_scores_sum
+        grads['W2'] += np.dot(O1.T, W2)
+        grads['b2'] += 
         #######################################################################
         #                              END OF YOUR CODE                             #
         #######################################################################
