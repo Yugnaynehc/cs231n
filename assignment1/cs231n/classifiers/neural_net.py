@@ -34,9 +34,11 @@ class TwoLayerNet(object):
         - output_size: The number of classes C.
         """
         self.params = {}
-        self.params['W1'] = std * np.random.randn(input_size, hidden_size)
+        # self.params['W1'] = std * np.random.randn(input_size, hidden_size)
+        self.params['W1'] = np.random.randn(input_size, hidden_size) * np.sqrt(2.0/(input_size*hidden_size))
         self.params['b1'] = np.zeros(hidden_size)
-        self.params['W2'] = std * np.random.randn(hidden_size, output_size)
+        # self.params['W2'] = std * np.random.randn(hidden_size, output_size)
+        self.params['W2'] = np.random.randn(hidden_size, output_size) * np.sqrt(2.0/(hidden_size*output_size))
         self.params['b2'] = np.zeros(output_size)
 
     def loss(self, X, y=None, reg=0.0):
@@ -158,7 +160,7 @@ class TwoLayerNet(object):
 
     def train(self, X, y, X_val, y_val,
               learning_rate=1e-3, learning_rate_decay=0.95,
-              reg=1e-5, num_iters=100,
+              reg=1e-5, num_iters=100, num_epoch=None, mu=0.9,
               batch_size=200, verbose=False):
         """
         Train this neural network using stochastic gradient descent.
@@ -193,7 +195,8 @@ class TwoLayerNet(object):
         v_W2, v_b2 = 0.0, 0.0
         v_W1, v_b1 = 0.0, 0.0
 
-
+        if num_epoch is not None:
+            num_iters = num_epoch * iterations_per_epoch
         for it in xrange(num_iters):
             X_batch = None
             y_batch = None
@@ -223,15 +226,18 @@ class TwoLayerNet(object):
             #     self.params[v] -= learning_rate*grads[v]
             
             # Try Nesterov
-            mu = 0.9
+            v_W2_prev = v_W2
             v_W2 = mu*v_W2 - learning_rate*grads['W2']
-            self.params['W2'] += v_W2
+            self.params['W2'] += -mu*v_W2_prev + (1+mu)*v_W2
+            v_b2_prev = v_b2
             v_b2 = mu*v_b2 - learning_rate*grads['b2']
-            self.params['b2'] += v_b2
+            self.params['b2'] += -mu*v_b2_prev + (1+mu)*v_b2
+            v_W1_prev = v_W1
             v_W1 = mu*v_W1 - learning_rate*grads['W1']
-            self.params['W1'] += v_W1
+            self.params['W1'] += -mu*v_W1_prev + (1+mu)*v_W1
+            v_b1_prev = v_b1
             v_b1 = mu*v_b1 - learning_rate*grads['b1']
-            self.params['b1'] += v_b1
+            self.params['b1'] += mu*v_b1_prev + (1+mu)*v_b1
             
             ###################################################################
             #                             END OF YOUR CODE                          #
